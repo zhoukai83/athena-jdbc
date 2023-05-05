@@ -32,4 +32,16 @@ public interface ConnectionConfiguration extends AutoCloseable {
     ConnectionConfiguration withQueryTimeout(Duration timeout);
 
     Result createResult(QueryExecution queryExecution);
+
+    String getAccessKeyId();
+
+    void setAccessKeyId(String accessKeyId);
+
+    String getSecretAccessKey();
+
+    void setSecretAccessKey(String secretAccessKey);
+
+    String getProfile();
+
+    void setProfile(String profile);
 }

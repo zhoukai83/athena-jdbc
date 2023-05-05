@@ -30,11 +30,14 @@ public class AthenaConnection implements Connection {
     private ConnectionConfiguration configuration;
     private DatabaseMetaData metaData;
     private boolean open;
+    private String catalog;
 
     AthenaConnection(ConnectionConfiguration configuration) {
         this.configuration = configuration;
         this.metaData = null;
         this.open = true;
+
+        this.catalog = "AwsDataCatalog";
     }
 
     private void checkClosed() throws SQLException {
@@ -207,12 +210,12 @@ public class AthenaConnection implements Connection {
 
     @Override
     public void setCatalog(String catalog) throws SQLException {
-        throw new SQLFeatureNotSupportedException("Athena does not support changing catalogs");
+        this.catalog = catalog;
     }
 
     @Override
     public String getCatalog() {
-        return "AwsDataCatalog";
+        return this.catalog;
     }
 
     @Override
@@ -317,36 +320,36 @@ public class AthenaConnection implements Connection {
 
     @Override
     public Clob createClob() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 0");
     }
 
     @Override
     public Blob createBlob() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 1");
     }
 
     @Override
     public NClob createNClob() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 2");
     }
 
     @Override
     public SQLXML createSQLXML() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 3");
     }
 
     @Override
     public Array createArrayOf(String typeName, Object[] elements) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 4");
     }
 
     @Override
     public Struct createStruct(String typeName, Object[] attributes) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 5");
     }
 
     @Override
     public void abort(Executor executor) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaConnection Not Implemented: 6");
     }
 }

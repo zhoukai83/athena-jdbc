@@ -6,6 +6,9 @@ import io.burt.athena.result.PreloadingStandardResult;
 import io.burt.athena.result.Result;
 import io.burt.athena.result.S3Result;
 import io.burt.athena.result.StandardResult;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.athena.AthenaAsyncClient;
 import software.amazon.awssdk.services.athena.model.QueryExecution;
@@ -25,6 +28,12 @@ class ConcreteConnectionConfiguration implements ConnectionConfiguration {
     private AthenaAsyncClient athenaClient;
     private S3AsyncClient s3Client;
     private PollingStrategy pollingStrategy;
+
+    private String accessKeyId;
+
+    private String secretAccessKey;
+
+    private String profile;
 
     ConcreteConnectionConfiguration(Region awsRegion, String databaseName, String workGroupName, String outputLocation, Duration networkTimeout, Duration queryTimeout, ResultLoadingStrategy resultLoadingStrategy) {
         this.awsRegion = awsRegion;
@@ -69,7 +78,16 @@ class ConcreteConnectionConfiguration implements ConnectionConfiguration {
     @Override
     public AthenaAsyncClient athenaClient() {
         if (athenaClient == null) {
-            athenaClient = AthenaAsyncClient.builder().region(awsRegion).build();
+            if (profile != null && !profile.equals("")) {
+                ProfileCredentialsProvider profileCredentialsProvider = ProfileCredentialsProvider.create(profile);
+                athenaClient = AthenaAsyncClient.builder().region(awsRegion).credentialsProvider(profileCredentialsProvider).build();
+            }else if (accessKeyId == null || secretAccessKey == null) {
+                athenaClient = AthenaAsyncClient.builder().region(awsRegion).build();
+            }else {
+                AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+                StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(credentials);
+                athenaClient = AthenaAsyncClient.builder().region(awsRegion).credentialsProvider(credentialsProvider).build();
+            }
         }
         return athenaClient;
     }
@@ -126,5 +144,29 @@ class ConcreteConnectionConfiguration implements ConnectionConfiguration {
             s3Client.close();
             s3Client = null;
         }
+    }
+
+    public String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public void setAccessKeyId(String accessKeyId) {
+        this.accessKeyId = accessKeyId;
+    }
+
+    public String getSecretAccessKey() {
+        return secretAccessKey;
+    }
+
+    public void setSecretAccessKey(String secretAccessKey) {
+        this.secretAccessKey = secretAccessKey;
+    }
+
+    public String getProfile() {
+        return profile;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 }

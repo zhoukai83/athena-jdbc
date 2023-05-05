@@ -3,6 +3,7 @@ package io.burt.athena;
 import io.burt.athena.configuration.ConnectionConfiguration;
 import io.burt.athena.configuration.ConnectionConfigurationFactory;
 import io.burt.athena.configuration.ResultLoadingStrategy;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 
 import java.sql.Connection;
@@ -19,11 +20,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AthenaDriver implements Driver {
+
+    org.slf4j.Logger log = LoggerFactory.getLogger(AthenaDriver.class);
     public static final String REGION_PROPERTY_NAME = "region";
     public static final String WORK_GROUP_PROPERTY_NAME = "workGroup";
     public static final String OUTPUT_LOCATION_PROPERTY_NAME = "outputLocation";
     public static final String DEFAULT_DATABASE_NAME = "default";
     public static final String JDBC_SUBPROTOCOL = "athena";
+
+    public static final String PROFILE = "profile";
 
     private static final Pattern URL_PATTERN = Pattern.compile("^jdbc:" + JDBC_SUBPROTOCOL + "(?::([a-zA-Z]\\w*))?$");
 
@@ -121,21 +126,30 @@ public class AthenaDriver implements Driver {
      */
     @Override
     public Connection connect(String url, Properties connectionProperties) {
+        log.info(connectionProperties.toString());
+        System.out.println(connectionProperties);
         Matcher m = matchURL(url);
         if (m.matches()) {
             String databaseName = m.group(1) == null ? DEFAULT_DATABASE_NAME : m.group(1);
             Region region = connectionProperties.containsKey(REGION_PROPERTY_NAME) ? Region.of(connectionProperties.getProperty(REGION_PROPERTY_NAME)) : null;
             String workGroup = connectionProperties.getProperty(WORK_GROUP_PROPERTY_NAME);
             String outputLocation = connectionProperties.getProperty(OUTPUT_LOCATION_PROPERTY_NAME);
+            String profile = connectionProperties.getProperty(PROFILE, "");
             ConnectionConfiguration configuration = connectionConfigurationFactory.createConnectionConfiguration(
                     region,
                     databaseName,
                     workGroup,
                     outputLocation,
-                    Duration.ofMinutes(1),
-                    Duration.ofMinutes(30),
-                    ResultLoadingStrategy.S3
+                    Duration.ofSeconds(60),
+                    Duration.ofSeconds(120),
+                    ResultLoadingStrategy.GET_EXECUTION_RESULTS
             );
+
+            String accessKeyId = connectionProperties.containsKey("user") ? connectionProperties.getProperty("user") : null;
+            String secretAccessKey = connectionProperties.containsKey("password") ? connectionProperties.getProperty("password") : null;
+            configuration.setAccessKeyId(accessKeyId);
+            configuration.setSecretAccessKey(secretAccessKey);
+            configuration.setProfile(profile);
             return new AthenaConnection(configuration);
         } else {
             return null;

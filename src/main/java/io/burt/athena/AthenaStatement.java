@@ -1,6 +1,7 @@
 package io.burt.athena;
 
 import io.burt.athena.configuration.ConnectionConfiguration;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.athena.AthenaAsyncClient;
 import software.amazon.awssdk.services.athena.model.QueryExecution;
 
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 public class AthenaStatement implements Statement {
+
     private final AthenaAsyncClient athenaClient;
     private Clock clock;
 
@@ -29,6 +31,9 @@ public class AthenaStatement implements Statement {
     private ResultSet currentResultSet;
     private Function<String, Optional<String>> clientRequestTokenProvider;
     private boolean open;
+
+    private int fetchSize;
+    private int maxRows;
 
     AthenaStatement(ConnectionConfiguration configuration, Clock clock) {
         this.configuration = configuration;
@@ -124,6 +129,7 @@ public class AthenaStatement implements Statement {
                 .queryExecution();
         switch (queryExecution.status().state()) {
             case SUCCEEDED:
+                this.open = false;
                 return Optional.of(createResultSet(queryExecution));
             case FAILED:
             case CANCELLED:
@@ -265,27 +271,29 @@ public class AthenaStatement implements Statement {
 
     @Override
     public int getMaxFieldSize() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 0");
     }
 
     @Override
     public void setMaxFieldSize(int max) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 1");
     }
 
     @Override
     public int getMaxRows() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 2");
+//        return this.maxRows;
     }
 
     @Override
     public void setMaxRows(int max) {
-        throw new UnsupportedOperationException("Not implemented");
+        this.maxRows = max;
+//        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 3");
     }
 
     @Override
     public void setEscapeProcessing(boolean enable) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 4");
     }
 
     public void setQueryTimeout(Duration timeout) {
@@ -304,27 +312,29 @@ public class AthenaStatement implements Statement {
 
     @Override
     public SQLWarning getWarnings() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 5");
     }
 
     @Override
     public void clearWarnings() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 6");
     }
 
     @Override
     public void setCursorName(String name) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 7");
     }
 
     @Override
     public int getUpdateCount() {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 8");
+        return -1;
     }
 
     @Override
     public boolean getMoreResults() {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 9");
+        return false;
     }
 
     @Override
@@ -341,76 +351,78 @@ public class AthenaStatement implements Statement {
 
     @Override
     public void setFetchSize(int rows) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 10");
+        this.fetchSize = rows;
     }
 
     @Override
     public int getFetchSize() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 11");
+//        return this.fetchSize;
     }
 
     @Override
     public int getResultSetConcurrency() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 12");
     }
 
     @Override
     public int getResultSetType() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 13");
     }
 
     @Override
     public void addBatch(String sql) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 14");
     }
 
     @Override
     public void clearBatch() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 15");
     }
 
     @Override
     public int[] executeBatch() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 16");
     }
 
     @Override
     public Connection getConnection() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 17");
     }
 
     @Override
     public boolean getMoreResults(int current) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 18");
     }
 
     @Override
     public ResultSet getGeneratedKeys() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 19");
     }
 
     @Override
     public int getResultSetHoldability() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 20");
     }
 
     @Override
     public void setPoolable(boolean poolable) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 21");
     }
 
     @Override
     public boolean isPoolable() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 22");
     }
 
     @Override
     public void closeOnCompletion() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 23");
     }
 
     @Override
     public boolean isCloseOnCompletion() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaStatement Not Implemented: 24");
     }
 }

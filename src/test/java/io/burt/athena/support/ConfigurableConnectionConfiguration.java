@@ -93,6 +93,36 @@ public class ConfigurableConnectionConfiguration implements ConnectionConfigurat
     }
 
     @Override
+    public String getAccessKeyId() {
+        return null;
+    }
+
+    @Override
+    public void setAccessKeyId(String accessKeyId) {
+
+    }
+
+    @Override
+    public String getSecretAccessKey() {
+        return null;
+    }
+
+    @Override
+    public void setSecretAccessKey(String secretAccessKey) {
+
+    }
+
+    @Override
+    public String getProfile() {
+        return null;
+    }
+
+    @Override
+    public void setProfile(String profile) {
+
+    }
+
+    @Override
     public void close() {
     }
 }

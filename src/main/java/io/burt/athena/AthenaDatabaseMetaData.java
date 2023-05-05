@@ -1,16 +1,32 @@
 package io.burt.athena;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.RowIdLifetime;
-import java.sql.SQLException;
+import org.slf4j.LoggerFactory;
+
+import java.sql.*;
 
 class AthenaDatabaseMetaData implements DatabaseMetaData {
-    private final Connection connection;
+    org.slf4j.Logger log = LoggerFactory.getLogger(AthenaDatabaseMetaData.class);
+
+    public static void main(String[] args) {
+        AthenaDatabaseMetaData meta = new AthenaDatabaseMetaData();
+        try {
+            ResultSet resultSet = meta.getTableTypes();
+            while(resultSet.next()) {
+                System.out.println(resultSet.getString(0));
+                System.out.println(resultSet.getString("TABLE_TYPE"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private final AthenaConnection connection;
 
     AthenaDatabaseMetaData(Connection connection) {
-        this.connection = connection;
+        this.connection = (AthenaConnection) connection;
+    }
+
+    AthenaDatabaseMetaData() {
+        this.connection = null;
     }
 
     @Override
@@ -244,7 +260,7 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public boolean supportsConvert(int fromType, int toType) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 0: supportsConvert");
     }
 
     @Override
@@ -644,87 +660,239 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+//        ListResultSet retVal = new ListResultSet();
+//        retVal.setColumnNames("PROCEDURE_CAT", "PROCEDURE_SCHEMA", "PROCEDURE_NAME", "REMARKS",
+//                "PROCEDURE_TYPE", "SPECIFIC_NAME");
+//        return retVal;
+        return empty();
     }
 
     @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 678");
+        return empty();
+    }
+
+    private static ResultSet empty() {
+        return new ListResultSet();
+    }
+
+    private String[] createTableRow(String catalogName, String tableName, String schemaPattern, String tableNamePattern, String[] types) {
+        String[] data = new String[10];
+        data[0] = "AwsDataCatalog"; // TABLE_SCHEM
+        data[1] = schemaPattern; // TABLE_CAT
+        data[2] = tableName; // TABLE_NAME
+        data[3] = "TABLE"; // TABLE_TYPE
+        data[4] = String.format("r: %s, %s, %s, %s", catalogName, schemaPattern, tableNamePattern, String.join(":", types)); // REMARKS
+        data[5] = ""; // TYPE_CAT
+        data[6] = ""; // TYPE_SCHEM
+        data[7] = ""; // TYPE_NAME
+        data[8] = ""; // SELF_REFERENCING_COL_NAME
+        data[9] = ""; // REF_GENERATION
+        return data;
     }
 
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types) {
-        throw new UnsupportedOperationException("Not implemented");
+        ListResultSet listResultSet = new ListResultSet();
+        listResultSet.setColumnNames("TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME",
+                "TABLE_TYPE", "REMARKS", "TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "SELF_REFERENCING_COL_NAME",
+                "REF_GENERATION");
+        try(Statement statement = connection.createStatement()) {
+            String schemaPatternFormat = schemaPattern.replaceAll("\\\\", "");
+            log.info(String.format("getTables, catalog:%s, schemaPattern:%s, tableNamePattern:%s", catalog, schemaPattern, tableNamePattern));
+            String sql = String.format("show TABLES in %s;", schemaPatternFormat);
+            log.info(sql);
+
+            try(ResultSet resultSet = statement.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    listResultSet.addRow(createTableRow(catalog, resultSet.getString(1), schemaPatternFormat, tableNamePattern, types));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e + String.format(" getTables %s, %s, %s", catalog, schemaPattern, tableNamePattern));
+        }
+
+        return listResultSet;
     }
 
     @Override
-    public ResultSet getSchemas() {
-        throw new UnsupportedOperationException("Not implemented");
+    public ResultSet getSchemas() throws SQLException {
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: getSchemas");
+        Statement statement = connection.createStatement();
+        return statement.executeQuery("SELECT schema_name as TABLE_SCHEM, catalog_name as TABLE_CATALOG FROM INFORMATION_SCHEMA.SCHEMATA;");
     }
 
     @Override
     public ResultSet getCatalogs() {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 5");
+        ListResultSet result = new ListResultSet();
+        result.setColumnNames("TABLE_CAT");
+        log.info("getCatalogs, ");
+
+        try(Statement statement = connection.createStatement()) {
+            String sql = "SELECT distinct(catalog_name) FROM information_schema.schemata;";
+            log.info(sql);
+
+            try(ResultSet resultSet = statement.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    result.addRow(new String[] {resultSet.getString(1)});
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return result;
     }
 
     @Override
     public ResultSet getTableTypes() {
-        throw new UnsupportedOperationException("Not implemented");
+        ListResultSet result = new ListResultSet();
+        result.setColumnNames("TABLE_TYPE");
+        result.addRow(new String[]{"TABLE"});
+        result.addRow(new String[]{"tables"});
+        result.addRow(new String[]{"table"});
+        result.addRow(new String[]{"VIEW"});
+        result.addRow(new String[]{"SYSTEM TABLE"});
+        result.addRow(new String[]{"GLOBAL TEMPORARY"});
+        result.addRow(new String[]{"LOCAL TEMPORARY"});
+        result.addRow(new String[]{"ALIAS"});
+        result.addRow(new String[]{"SYNONYM"});
+        return result;
+    }
+
+    protected int convertColumnTypeToEnum(String columnType) {
+        switch (columnType){
+            case "varchar":
+                return Types.VARCHAR;
+            case "integer":
+                return Types.INTEGER;
+            case "bigint":
+                return Types.BIGINT;
+            case "boolean":
+                return Types.BOOLEAN;
+            default:
+                return Types.VARCHAR;
+        }
+    }
+
+    protected Object[] createColumnsRow(String columnName, String columnType, String position, String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+    {
+        int sqlDataType = convertColumnTypeToEnum(columnType);
+        Object[] data = new Object[24];
+        data[0] = this.connection.getCatalog(); // TABLE_CAT
+        data[1] = schemaPattern; // TABLE_SCHEM
+        data[2] = tableNamePattern; // TABLE_NAME
+        data[3] = columnName; // COLUMN_NAME
+        data[4] = sqlDataType; // DATA_TYPE
+        data[5] = columnType; // TYPE_NAME
+        data[6] = 255; // COLUMN_SIZE
+        data[7] = 255; // BUFFER_LENGTH
+        data[8] = 32; // DECIMAL_DIGITS
+        data[9] = 32; // NUM_PREC_RADIX
+        data[10] = columnNullable; // NULLABLE
+        data[11] = String.format("%s, %s, %s, %s", catalog, schemaPattern, tableNamePattern, columnNamePattern); // Remarks
+        data[12] = null; // COLUMN_DEF
+        data[13] = sqlDataType; // SQL_DATA_TYPE
+        data[14] = sqlDataType; // SQL_DATETIME_SUB
+        data[15] = 16; // CHAR_OCTET_LENGTH
+        data[16] = Integer.parseInt(position); // ORDINAL_POSITION
+        data[17] = "YES"; // IS_NULLABLE
+        data[18] = null; // SCOPE_CATLOG
+        data[19] = null; // SCOPE_SCHEMA
+        data[20] = null; // SCOPE_TABLE
+        data[21] = columnType; // SOURCE_DATA_TYPE
+        data[22] = ""; // IS_AUTOINCREMENT
+        data[23] = ""; // IS_GENERATEDCOLUMN
+        return data;
     }
 
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        ListResultSet listResultSet = new ListResultSet();
+        listResultSet.setColumnNames("TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "DATA_TYPE",
+                "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS", "NUM_PREC_RADIX",
+                "NULLABLE", "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB",
+                "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATLOG", "SCOPE_SCHEMA",
+                "SCOPE_TABLE", "SOURCE_DATA_TYPE", "IS_AUTOINCREMENT", "IS_GENERATEDCOLUMN"
+        );
+
+        String tableName = tableNamePattern.replaceAll("\\\\", "");
+        String schemaName = schemaPattern.replaceAll("\\\\", "");
+        try(Statement statement = connection.createStatement()) {
+            String sql = String.format("SELECT * FROM information_schema.columns WHERE table_schema = '%s' and table_name = '%s';", schemaName, tableName);
+            if (schemaName == null || schemaName == "") {
+                sql = String.format("SELECT * FROM information_schema.columns WHERE table_name = '%s';", tableName);
+            }
+
+            log.info(sql);
+            try(ResultSet resultSet = statement.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    String dataType = resultSet.getString("data_type");
+                    String extraInfo = resultSet.getString("extra_info");   // partition key
+                    String position = resultSet.getString("ordinal_position");
+                    listResultSet.addRow(createColumnsRow(resultSet.getString("column_name"), dataType, position, catalog, schemaPattern, tableNamePattern, columnNamePattern));
+                }
+            }
+            log.info(listResultSet.toString());
+        } catch (SQLException e) {
+            throw new RuntimeException(e + String.format("getColumns %s, %s, %s", catalog, schemaPattern, tableNamePattern));
+        }
+        return listResultSet;
     }
 
     @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 8");
     }
 
     @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 9");
     }
 
     @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 10");
     }
 
     @Override
     public ResultSet getVersionColumns(String catalog, String schema, String table) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 11");
     }
 
     @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 12");
+        return empty();
     }
 
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 13");
+        return empty();
     }
 
     @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 14");
     }
 
     @Override
     public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable, String foreignCatalog, String foreignSchema, String foreignTable) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 15");
     }
 
     @Override
     public ResultSet getTypeInfo() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 16");
     }
 
     @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 17");
+        return empty();
     }
 
     @Override
@@ -789,7 +957,7 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 18");
     }
 
     @Override
@@ -814,17 +982,17 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 19");
     }
 
     @Override
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 20");
     }
 
     @Override
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 21");
     }
 
     @Override
@@ -834,7 +1002,7 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public int getResultSetHoldability() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 22");
     }
 
     @Override
@@ -859,7 +1027,7 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 23");
     }
 
     @Override
@@ -874,22 +1042,24 @@ class AthenaDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getClientInfoProperties() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 24");
     }
 
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 25");
+        return empty();
     }
 
     @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+//        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 26");
+        return empty();
     }
 
     @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("DatabaseMetaData Not implemented: 27");
     }
 
     @Override

@@ -5,7 +5,7 @@
 
   <groupId>io.burt</groupId>
   <artifactId>athena-jdbc</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.5.1-SNAPSHOT</version>
   <name>Athena JDBC</name>
   <description>Athena JDBC driver</description>
   <url>https://github.com/burtcorp/athena-jdbc</url>
@@ -77,11 +77,21 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.slf4j</groupId>-->
+<!--      <artifactId>slf4j-simple</artifactId>-->
+<!--      <version>${slf4j.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.5</version>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>test</scope>
+      <version>1.6.4</version>
     </dependency>
   </dependencies>
 
@@ -154,18 +164,34 @@
           </execution>
         </executions>
       </plugin>
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--        <version>3.1.1</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>attach-javadocs</id>-->
+<!--            <goals>-->
+<!--              <goal>jar</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
-            <id>attach-javadocs</id>
+            <phase>package</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>single</goal>
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
       </plugin>
     </plugins>
   </build>

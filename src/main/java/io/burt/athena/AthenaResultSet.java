@@ -231,12 +231,12 @@ public class AthenaResultSet implements ResultSet {
 
     @Override
     public SQLWarning getWarnings() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 0");
     }
 
     @Override
     public void clearWarnings() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 1");
     }
 
     @Override
@@ -612,54 +612,54 @@ public class AthenaResultSet implements ResultSet {
 
     @Override
     public InputStream getAsciiStream(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 2");
     }
 
     @Override
     public InputStream getAsciiStream(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 3");
     }
 
     @Override
     @Deprecated
     public InputStream getUnicodeStream(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 4");
     }
 
     @Override
     @Deprecated
     public InputStream getUnicodeStream(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 5");
     }
 
     @Override
     public InputStream getBinaryStream(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 6");
     }
 
     @Override
     public InputStream getBinaryStream(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 7");
     }
 
     @Override
     public Reader getCharacterStream(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 8");
     }
 
     @Override
     public Reader getCharacterStream(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 9");
     }
 
     @Override
     public Reader getNCharacterStream(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 10");
     }
 
     @Override
     public Reader getNCharacterStream(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 11");
     }
 
     @Override
@@ -736,32 +736,32 @@ public class AthenaResultSet implements ResultSet {
 
     @Override
     public Ref getRef(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 12");
     }
 
     @Override
     public Ref getRef(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 13");
     }
 
     @Override
     public Blob getBlob(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 14");
     }
 
     @Override
     public Blob getBlob(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 15");
     }
 
     @Override
     public Clob getClob(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 16");
     }
 
     @Override
     public Clob getClob(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 17");
     }
 
     private Array convertToArray(String str) throws SQLException {
@@ -787,42 +787,42 @@ public class AthenaResultSet implements ResultSet {
 
     @Override
     public NClob getNClob(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 18");
     }
 
     @Override
     public NClob getNClob(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 19");
     }
 
     @Override
     public URL getURL(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 20");
     }
 
     @Override
     public URL getURL(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 21");
     }
 
     @Override
     public SQLXML getSQLXML(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 22");
     }
 
     @Override
     public SQLXML getSQLXML(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 23");
     }
 
     @Override
     public RowId getRowId(int columnIndex) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 24");
     }
 
     @Override
     public RowId getRowId(String columnLabel) {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("AthenaResult Not Implemented: 25");
     }
 
     private void movementsNotSupported() throws SQLException {
